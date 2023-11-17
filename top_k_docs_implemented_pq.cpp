@@ -1,9 +1,7 @@
-
 /*
-
-    To be added
-
+g++ top_k_docs_implemented_pq.cpp FibonacciHeap.cpp -o top_k
 */
+#include "FibonacciHeap.h"
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -20,6 +18,7 @@
 
 using namespace std;
 using namespace std::chrono;
+#define DT_REG _A_NORMAL
 
 struct Document
 {
@@ -114,11 +113,10 @@ int main()
     const string directoryPath = "docs/1000";
     const int K = 5; // Number of top documents to retrieve
     const string query = "for the music";
-
     // Process the documents in the directory
     processDirectory(directoryPath);
 
-    priority_queue<Document> topKDocuments;
+    // FibonacciHeap *heap = new FibonacciHeap();
 
     // Process the query
     istringstream iss(query);
@@ -129,7 +127,6 @@ int main()
     {
         // Tokenize and preprocess the query term
         vector<string> terms = tokenizeAndPreprocess(word);
-
         // Update queryTermFrequency as needed
         for (const string &term : terms)
         {
@@ -137,7 +134,8 @@ int main()
         }
     }
     // Calculate scores for each document
-    vector<Document> allDocuments; // Store all documents with scores
+    // vector<Document> allDocuments; // Store all documents with scores
+    FibonacciHeap heap;
 
     // Iterate through the documents in the directory again and compute the score
     DIR *directory;
@@ -174,34 +172,24 @@ int main()
                 }
 
                 // Store the document with its score
-                allDocuments.push_back(Document(entry->d_name, documentScore));
+                // allDocuments.push_back(Document(entry->d_name, documentScore));
+                Node *documentNode = new Node(0, entry->d_name, documentScore);
+                heap.insertVertex(documentNode);
+
+                // string s1 = entry->d_name;
+                // int sc= documentScore;
+                // pair<int,string>temp = {sc,s1};
+                // heap->insertVertex(temp);
             }
         }
         closedir(directory);
     }
-
-    // Update the topKDocuments priority queue with the top-K documents
-    for (const Document &doc : allDocuments)
+    int cnt = 0;
+    while (cnt < K)
     {
-        topKDocuments.push(doc);
-        if (topKDocuments.size() > K)
-        {
-            topKDocuments.pop(); // Keep the top-K documents
-        }
-    }
-
-    // Print the top-K documents
-    vector<Document> topKDocs;
-    while (!topKDocuments.empty())
-    {
-        topKDocs.push_back(topKDocuments.top());
-        topKDocuments.pop();
-    }
-
-    // Print the top-K documents (in reverse order, as they were popped off in ascending order)
-    for (int i = K - 1; i >= 0; i--)
-    {
-        cout << topKDocs[i].name << " (Score: " << topKDocs[i].score << ")" << endl;
+        Node *docNode = heap.deleteMin();
+        cout << docNode->data.second << " (Score: " << docNode->key << ")" << endl;
+        cnt++;
     }
     auto stop = high_resolution_clock::now();
     auto duration = duration_cast<microseconds>(stop - start);
